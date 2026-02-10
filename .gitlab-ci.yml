@@ -1,0 +1,115 @@
+variables:
+  CI_REGISTRY: registry.dialtek-gitlab.ru
+  BUILD_IMAGE: ${CI_REGISTRY}/software-development/services/docker-images/dt-conan-linux-dev-image:ubuntu-conan-1.0.0
+
+stages:
+  - build
+  - upload
+
+# Linux build
+linux_dev_build:
+  stage: build
+  image: ${BUILD_IMAGE}  
+  script:
+    - cd conan/scripts_linux/
+    - chmod +x ./create_conan_package.sh
+    - ./create_conan_package.sh --channel=dev --profile=release
+  tags:
+    - linux
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "docker"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
+
+linux_release_build:
+  stage: build
+  image: ${BUILD_IMAGE}  
+  script:
+    - cd conan/scripts_linux/
+    - chmod +x ./create_conan_package.sh
+    - ./create_conan_package.sh --channel=dev --profile=release
+  tags:
+    - linux
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "docker"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+# Linux upload
+linux_dev_upload:
+  stage: upload
+  image: ${BUILD_IMAGE}
+  script:
+    - cd conan/scripts_linux/
+    - chmod +x ./create_conan_package.sh
+    - ./create_conan_package.sh --channel=dev --profile=release
+    - chmod +x ./upload_conan_package.sh
+    - ./upload_conan_package.sh --channel=dev
+  tags:
+    - linux
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "docker"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev"
+
+linux_release_upload:
+  stage: upload
+  image: ${BUILD_IMAGE}
+  script:
+    - cd conan/scripts_linux/
+    - chmod +x ./create_conan_package.sh
+    - ./create_conan_package.sh --channel=dev --profile=release
+    - chmod +x ./upload_conan_package.sh
+    - ./upload_conan_package.sh --channel=dev
+  tags:
+    - linux
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "docker"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"
+
+# Windows build
+windows_dev_build:
+  stage: build
+  script:
+    - cd .\conan\scripts_windows\
+    - ./create_conan_package.bat --channel=dev --profile=release
+  tags:
+    - windows
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "shell"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
+
+
+windows_release_build:
+  stage: build
+  script:
+    - cd .\conan\scripts_windows\
+    - ./create_conan_package.bat --channel=release --profile=release
+  tags:
+    - windows
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "shell"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+# Windows upload
+windows_dev_upload:
+  stage: upload
+  script:
+    - cd .\conan\scripts_windows\
+    - ./create_conan_package.bat --channel=dev --profile=release
+    - ./upload_conan_package.bat --channel=dev
+  tags:
+    - windows
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "shell"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev"
+
+
+windows_release_upload:
+  stage: upload
+  script:
+    - cd .\conan\scripts_windows\
+    - ./create_conan_package.bat --channel=release --profile=release
+    - ./upload_conan_package.bat --channel=release
+  tags:
+    - windows
+  rules:
+    - if: $CI_RUNNER_EXECUTOR == "shell"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"

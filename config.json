@@ -1,0 +1,8 @@
+{
+    "conan_package" : 
+    {
+        "name" : "modbuswrappers",
+        "version": "2.1.11",
+        "user" : "dialtek"
+    }
+}
